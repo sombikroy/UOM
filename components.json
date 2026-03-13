@@ -1,0 +1,15 @@
+{
+	"components": [
+		{
+			"id": "manageuom",
+			"type": "VIEW_PLUGIN",
+			"allowMultipleInstances": false,
+			"name": "sr.custom.plugins.manageuom",
+			"propertyEditor": "sr.custom.plugins.manageuom.builder.PropertyEditor",
+			"i18n": "sr.custom.plugins.manageuom.i18n.i18n",
+            "productionProcessEnabled": false,
+           "productionProcessTitle": "manageuom",
+			"supportedPodTypes": ["OTHER"]
+		}   
+	]
+}
