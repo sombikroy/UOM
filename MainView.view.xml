@@ -1,0 +1,247 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout"
+  xmlns:layout="sap.ui.layout.form"
+  controllerName="sb.custom.plugins.manageuom.controller.MainView"
+  width="100%" height="100%">
+
+  <!-- ================================================================ -->
+  <!-- Create UoM Dialog                                                 -->
+  <!-- ================================================================ -->
+  <Dialog id="createUomDialog"
+          title="Create Unit of Measure"
+          contentWidth="48rem"
+          resizable="true"
+          draggable="true">
+    <content>
+      <VBox class="sapUiSmallMargin">
+
+        <!-- Core fields -->
+        <layout:SimpleForm id="createForm"
+                           editable="true"
+                           layout="ResponsiveGridLayout"
+                           labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                           adjustLabelSpan="false"
+                           emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                           columnsXL="2" columnsL="2" columnsM="1">
+
+          <Label text="Unit Code *" required="true"/>
+          <Input id="newUnitCode"    placeholder="e.g. KG"   maxLength="6"   valueLiveUpdate="true"/>
+
+          <Label text="Dimension"/>
+          <Input id="newDimension"   placeholder="e.g. MASS"/>
+
+          <Label text="ISO Code"/>
+          <Input id="newIsoCode"     placeholder="e.g. KGM"  maxLength="6"/>
+
+          <Label text="Numerator"/>
+          <Input id="newNumerator"   placeholder="1"         type="Number"/>
+
+          <Label text="Denominator"/>
+          <Input id="newDenominator" placeholder="1"         type="Number"/>
+
+          <Label text="10^Exponent"/>
+          <Input id="newExponent"    placeholder="0"         type="Number"/>
+
+          <Label text="Additive Constant"/>
+          <Input id="newAddConst"    placeholder="0"         type="Number"/>
+
+          <Label text="Is Primary"/>
+          <Switch id="newIsPrimary"  state="false"/>
+
+          <Label text="Is Standard"/>
+          <Switch id="newIsStandard" state="false"/>
+
+        </layout:SimpleForm>
+
+        <!-- Commercial Codes sub-section -->
+        <Panel headerText="Commercial Codes" expandable="true" expanded="false"
+               width="100%" class="sapUiTinyMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="Commercial Codes"/>
+              <ToolbarSpacer/>
+              <Button icon="sap-icon://add" text="Add" press="onAddCommCode"/>
+            </Toolbar>
+          </headerToolbar>
+          <Table id="newCommCodesTable"
+                 noDataText="No commercial codes added yet"
+                 items="{newUomModel>/commercialCodes}">
+            <columns>
+              <Column width="7rem"><Text text="Code"/></Column>
+              <Column width="5rem"><Text text="Lang"/></Column>
+              <Column><Text text="Short Text"/></Column>
+              <Column><Text text="Long Text"/></Column>
+              <Column width="3rem"/>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Input value="{newUomModel>commercialCode}" placeholder="Code" maxLength="6"/>
+                  <Input value="{newUomModel>language}"       placeholder="EN"   maxLength="2"/>
+                  <Input value="{newUomModel>shortText}"      placeholder="Short text"/>
+                  <Input value="{newUomModel>longText}"       placeholder="Long text"/>
+                  <Button icon="sap-icon://delete" type="Reject" press="onDeleteCommCode"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+      </VBox>
+    </content>
+    <beginButton>
+      <Button id="createSaveBtn" text="Create" type="Emphasized" press="onSaveNewUom"/>
+    </beginButton>
+    <endButton>
+      <Button text="Cancel" press="onCancelCreateUom"/>
+    </endButton>
+  </Dialog>
+
+  <!-- ================================================================ -->
+  <!-- Main Panel                                                        -->
+  <!-- ================================================================ -->
+  <Panel
+    id="panelPlugin"
+    width="100%" height="100%"
+    expandable="false" expanded="false"
+    accessibleRole="Region"
+    backgroundDesign="Transparent"
+    class="sapUiNoContentPadding">
+
+    <headerToolbar>
+      <Toolbar height="3rem">
+        <Button id="backButton"  visible="false" text="{i18n>template.back.btn}"
+                tooltip="{i18n>template.back.tooltip}" icon="sap-icon://nav-back" press="onBackPress"/>
+        <Title  id="headerTitle" text=""/>
+        <ToolbarSpacer/>
+        <Button id="closeButton" visible="false" tooltip="{i18n>template.close.tooltip}"
+                icon="sap-icon://decline" press="onClosePress"/>
+      </Toolbar>
+    </headerToolbar>
+
+    <content>
+      <VBox width="100%" height="100%">
+
+        <!-- Actions toolbar -->
+        <Toolbar>
+          <SearchField id="uomSearch" width="20rem"
+                       placeholder="Search UoMs (code, dimension, ISO, text…)"
+                       liveChange="onSearch"
+                       search="onSearch"/>
+          <ToolbarSpacer/>
+          <Button text="Create UoM" icon="sap-icon://add"
+                  type="Emphasized"  press="onOpenCreateDialog"/>
+          <Button text="Refresh"    icon="sap-icon://refresh" press="onRefresh"/>
+        </Toolbar>
+
+        <!-- Master / Details split -->
+        <l:Grid defaultSpan="XL6 L6 M12 S12" width="100%" vSpacing="1" hSpacing="1">
+
+          <!-- Master table -->
+          <l:content>
+            <Panel headerText="Units of Measure" width="100%" height="auto">
+              <Table id="uomTable"
+                     mode="SingleSelectMaster"
+                     growing="true"
+                     growingScrollToLoad="true"
+                     items="{path: 'uomsModel>/items'}"
+                     selectionChange="onUomSelect">
+                <columns>
+                  <Column><Text text="Unit Code"/></Column>
+                  <Column width="8rem"><Text text="Dimension"/></Column>
+                  <Column width="6rem"><Text text="ISO"/></Column>
+                  <Column width="6rem"><Text text="Primary"/></Column>
+                  <Column width="6rem"><Text text="Standard"/></Column>
+                  <Column width="7rem"><Text text="Numerator"/></Column>
+                  <Column width="8rem"><Text text="Denominator"/></Column>
+                  <Column width="7rem"><Text text="10^Exp"/></Column>
+                  <Column width="7rem"><Text text="Add Const"/></Column>
+                  <Column width="8rem"><Text text="# Comm. Codes"/></Column>
+                </columns>
+                <items>
+                  <ColumnListItem type="Active" press="onUomPress">
+                    <cells>
+                      <ObjectIdentifier title="{uomsModel>unitCode}"/>
+                      <Text text="{uomsModel>dimension}"/>
+                      <Text text="{uomsModel>isoCode}"/>
+                      <ObjectStatus text="{= ${uomsModel>isPrimary}  ? 'Yes' : 'No' }"
+                                    state="{= ${uomsModel>isPrimary}  ? 'Success' : 'None' }"/>
+                      <ObjectStatus text="{= ${uomsModel>isStandard} ? 'Yes' : 'No' }"
+                                    state="{= ${uomsModel>isStandard} ? 'Success' : 'None' }"/>
+                      <Text text="{uomsModel>numerator}"/>
+                      <Text text="{uomsModel>denominator}"/>
+                      <Text text="{uomsModel>exponentialBase10}"/>
+                      <Text text="{uomsModel>additiveConstant}"/>
+                      <ObjectNumber number="{= ${uomsModel>commercialCodes} ? ${uomsModel>commercialCodes}.length : 0 }"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+              <Toolbar design="Info">
+                <ToolbarSpacer/>
+                <Text text="{= 'Total: ' + ${uomsModel>/total} }"/>
+              </Toolbar>
+            </Panel>
+          </l:content>
+
+          <!-- Details panel -->
+          <l:content>
+            <Panel headerText="Details" width="100%" height="auto">
+              <IconTabBar expandable="false" expanded="true">
+                <items>
+                  <IconTabFilter text="Properties" icon="sap-icon://inspect">
+                    <layout:SimpleForm editable="false" layout="ResponsiveGridLayout" width="100%"
+                                       labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12"
+                                       adjustLabelSpan="false"
+                                       emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+                                       columnsXL="2" columnsL="2" columnsM="1">
+                      <Label text="Unit Code"/>        <Text text="{uomsModel>/selected/unitCode}"/>
+                      <Label text="Dimension"/>        <Text text="{uomsModel>/selected/dimension}"/>
+                      <Label text="ISO Code"/>         <Text text="{uomsModel>/selected/isoCode}"/>
+                      <Label text="Primary"/>          <Text text="{= ${uomsModel>/selected/isPrimary}  ? 'Yes' : 'No' }"/>
+                      <Label text="Standard"/>         <Text text="{= ${uomsModel>/selected/isStandard} ? 'Yes' : 'No' }"/>
+                      <Label text="Numerator"/>        <Text text="{uomsModel>/selected/numerator}"/>
+                      <Label text="Denominator"/>      <Text text="{uomsModel>/selected/denominator}"/>
+                      <Label text="10^Exponent"/>      <Text text="{uomsModel>/selected/exponentialBase10}"/>
+                      <Label text="Additive Constant"/><Text text="{uomsModel>/selected/additiveConstant}"/>
+                    </layout:SimpleForm>
+                  </IconTabFilter>
+
+                  <IconTabFilter text="Commercial Codes" icon="sap-icon://globe">
+                    <Table id="commCodesTable"
+                           noDataText="No commercial codes"
+                           items="{path: 'uomsModel>/selected/commercialCodes'}">
+                      <columns>
+                        <Column width="7rem"><Text text="Code"/></Column>
+                        <Column width="6rem"><Text text="Lang"/></Column>
+                        <Column><Text text="Short Text"/></Column>
+                        <Column><Text text="Long Text"/></Column>
+                      </columns>
+                      <items>
+                        <ColumnListItem>
+                          <cells>
+                            <Text text="{uomsModel>commercialCode}"/>
+                            <Text text="{uomsModel>language}"/>
+                            <Text text="{uomsModel>shortText}"/>
+                            <Text text="{uomsModel>longText}"/>
+                          </cells>
+                        </ColumnListItem>
+                      </items>
+                    </Table>
+                  </IconTabFilter>
+
+                  <IconTabFilter text="Raw JSON" icon="sap-icon://syntax">
+                    <TextArea value="{uomsModel>/selectedRaw}" rows="20" width="100%" editable="false"/>
+                  </IconTabFilter>
+                </items>
+              </IconTabBar>
+            </Panel>
+          </l:content>
+        </l:Grid>
+      </VBox>
+    </content>
+  </Panel>
+</mvc:View>
